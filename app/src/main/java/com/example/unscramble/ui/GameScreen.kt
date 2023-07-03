@@ -43,7 +43,7 @@ import com.example.unscramble.ui.theme.UnscrambleTheme
 
 @Composable
 fun GameScreen(
-    gameViewModel:GameViewModel = viewModel()
+    gameViewModel: GameViewModel = viewModel()
 ) {
     val gameUiState by gameViewModel.uiState.collectAsState()
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
@@ -62,9 +62,10 @@ fun GameScreen(
         )
 
         GameLayout(
-            onUserGuessChanged = { gameViewModel.updateUserGuess(it)},
+            onUserGuessChanged = { gameViewModel.updateUserGuess(it) },
             userGuess = gameViewModel.userGuess,
-            onKeyBoardDone = {},
+            onKeyBoardDone = { gameViewModel.checkUserGuess() },
+            isGuessWrong = gameUiState.isGuessedWordWrong,
             currentScrambledWord = gameUiState.currentScrambledWord,
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,7 +82,7 @@ fun GameScreen(
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { }
+                onClick = { gameViewModel.checkUserGuess() }
             ) {
                 Text(
                     text = stringResource(R.string.submit),
@@ -119,10 +120,11 @@ fun GameStatus(score: Int, modifier: Modifier = Modifier) {
 
 @Composable
 fun GameLayout(
-    onUserGuessChanged: (String) ->Unit,
-    userGuess:String,
+    onUserGuessChanged: (String) -> Unit,
+    userGuess: String,
     onKeyBoardDone: () -> Unit,
-    currentScrambledWord:String,
+    isGuessWrong: Boolean,
+    currentScrambledWord: String,
     modifier: Modifier = Modifier
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
@@ -162,13 +164,19 @@ fun GameLayout(
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.textFieldColors(containerColor = colorScheme.surface),
                 onValueChange = onUserGuessChanged,
-                label = { Text(stringResource(R.string.enter_your_word)) },
-                isError = false,
+                label = {
+                        if(isGuessWrong){
+                            Text(text = stringResource(id = R.string.wrong_guess))
+                        }else{
+                            Text(stringResource(id = R.string.enter_your_word))
+                        }
+                },
+                isError = isGuessWrong,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { }
+                    onDone = { onKeyBoardDone() }
                 )
             )
         }
